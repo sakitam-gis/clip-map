@@ -1,0 +1,74 @@
+{
+  "name": "clip-map",
+  "version": "0.1.0",
+  "private": false,
+  "description": "maptalks && mapbox server slide mask",
+  "homepage": "",
+  "author": "sakitam-fdd<smilefdd@gmail.com>",
+  "egg": {
+    "typescript": true,
+    "declarations": true
+  },
+  "scripts": {
+    "start": "cross-env TS_NODE_PROJECT=tsconfig.json egg-scripts start --daemon --title=egg-server-service",
+    "stop": "cross-env TS_NODE_PROJECT=tsconfig.json egg-scripts stop --title=egg-server-service",
+    "dev": "cross-env TS_NODE_PROJECT=tsconfig.json egg-bin dev",
+    "debug": "cross-env TS_NODE_PROJECT=tsconfig.json egg-bin debug",
+    "test-local": "cross-env TS_NODE_PROJECT=tsconfig.json egg-bin test",
+    "test": "cross-env TS_NODE_PROJECT=tsconfig.json npm run lint:server -- --fix && npm run test-local:server",
+    "cov": "cross-env TS_NODE_PROJECT=tsconfig.json egg-bin cov",
+    "tsc": "cross-env TS_NODE_PROJECT=tsconfig.json ets && tsc -p tsconfig.json",
+    "ci": "npm run lint:server && npm run cov:server && npm run tsc:server",
+    "autod": "autod",
+    "lint": "cross-env TS_NODE_PROJECT=tsconfig.json tslint --project . -c tslint.json",
+    "clean": "cross-env TS_NODE_PROJECT=tsconfig.json ets clean"
+  },
+  "dependencies": {
+    "axios": "^0.19.0",
+    "d3-contour": "^1.3.2",
+    "dayjs": "^1.8.15",
+    "fs-extra": "^8.1.0",
+    "lodash": "^4.17.11",
+    "maptalks": "^0.44.2",
+    "canvas": "2.5.0",
+    "jsdom": "^15.1.1",
+    "maptalks.node": "^0.2.0",
+    "mapbox-gl": "^1.4.1",
+    "stream-wormhole": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^12.7.12",
+    "@types/supertest": "^2.0.8",
+    "autod": "^3.1.0",
+    "autod-egg": "^1.1.0",
+    "cross-env": "^6.0.3",
+    "egg": "^2.24.0",
+    "egg-bin": "^4.13.2",
+    "egg-ci": "^1.13.0",
+    "egg-cors": "^2.2.0",
+    "egg-mock": "^3.24.1",
+    "egg-redis": "^2.4.0",
+    "egg-scripts": "^2.11.1",
+    "egg-security": "^2.6.1",
+    "egg-sequelize": "^5.2.0",
+    "tslib": "^1.10.0",
+    "tslint": "^5.20.0",
+    "tslint-config-egg": "^1.0.0",
+    "typescript": "^3.6.4"
+  },
+  "engines": {
+    "node": ">=8.9.0"
+  },
+  "ci": {
+    "version": "8"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "eslintIgnore": [
+    "coverage"
+  ],
+  "license": "MIT"
+}

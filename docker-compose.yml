@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  map-server:
+    image: node-clip-map:latest
+    build:
+      context: ./
+      args:
+        NODE_ENV: development
+    hostname: node-clip-map
+    environment:
+      - CORS_ORIGIN=****
+      - APP_HOST=127.0.0.1
+      - APP_PORT=7001
+    ports:
+      - "7001:7001"
+volumes:
+  yarn:

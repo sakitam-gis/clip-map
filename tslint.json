@@ -1,0 +1,13 @@
+{
+  "extends": ["tslint-config-egg"],
+  "rules": {
+    "whitespace": false,
+    "linebreak-style": false
+  },
+  "linterOptions": {
+    "exclude": [
+      "public/**",
+      "src/**"
+    ]
+  }
+}

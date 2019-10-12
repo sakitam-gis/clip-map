@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map - Display a map</title>
+<style type="text/css">
+  html,body{
+    margin:0px;height:100%;width:100%
+  }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maptalks/dist/maptalks.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/maptalks/dist/maptalks.min.js"></script>
+<body>
+
+<div id="map" class="container"></div>
+
+<script>
+  const all = 16;
+  let idx = 0;
+  const pixelRatio = 1;
+
+  const createCanvas = (width, height, scaleFactor, Canvas) => {
+    if (typeof document !== 'undefined') {
+      const canvas = document.createElement('canvas');
+      canvas.width = width * scaleFactor;
+      canvas.height = height * scaleFactor;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      return canvas;
+    }
+    // create a new canvas instance in node.js
+    // the canvas class needs to have a default constructor without any parameter
+    return new Canvas(width, height);
+  };
+
+  /**
+   * 计算真实视图宽高
+   * @param zoom
+   * @param extent
+   */
+  function mathRealWH (zoom, extent) {
+    const canvas = createCanvas(100, 100, pixelRatio);
+    const map = new maptalks.Map(canvas, {
+      center: [116.3949, 40.2073],
+      zoom: zoom,
+      devicePixelRatio: 1,
+      zoomAnimationDuration: 0
+    });
+
+    const max = extent.getMin();
+    const min = extent.getMax();
+    const pixelMin = map.coordinateToContainerPoint(min);
+    const pixelMax = map.coordinateToContainerPoint(max);
+    const width = Math.abs(pixelMax.x - pixelMin.x);
+    const height = Math.abs(pixelMax.y - pixelMin.y);
+    return {
+      width: (width + 50) * Math.pow(pixelRatio, 2),
+      height: (height + 50) * Math.pow(pixelRatio, 2),
+    }
+  }
+
+  async function init(zoom, index = 0) {
+    const boundary = await fetch('./beijing_GeoJSON.json')
+      .then(res => res.json())
+      .then(res => res.features[index]);
+    const mask = new maptalks.Polygon(boundary.geometry.coordinates, {
+      'symbol': [
+        {
+          'lineColor': '#ccc',
+          'lineWidth': 8,
+          'polygonFillOpacity': 0
+        },
+      ]
+    });
+
+    const extent = mask.getExtent();
+
+    const { width, height } = mathRealWH(zoom, extent);
+    const canvas = document.getElementById('map');
+    // canvas.width = width * pixelRatio;
+    // canvas.height = height * pixelRatio;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+
+    const map = new maptalks.Map(canvas, {
+      center: [116.3949, 40.2073],
+      zoom: zoom,
+      // devicePixelRatio: pixelRatio,
+      zoomAnimationDuration: 0,
+      seamlessZoom: false,
+      spatialReference: {
+        projection: 'baidu',
+      },
+    });
+
+    map.fitExtent(extent, 0);
+    const _zoom = map.getFitZoom(extent);
+    map.setZoom(_zoom);
+
+    const layer = new maptalks.TileLayer('base', {
+      spatialReference: {
+        projection: 'baidu',
+      },
+      // urlTemplate: `https://api.mapbox.com/styles/v1/mapbox/streets-zh-v1/tiles/{z}/{x}/{y}${2 > 1.5 ? '@2x' : ''}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejh2N21nMzAxMmQzMnA5emRyN2lucW0ifQ.jSE-g2vsn48Ry928pqylcg`,
+      urlTemplate: 'http://online{s}.map.bdimg.com/tile/?qt=vtile&x={x}&y={y}&z={z}&styles=pl&scaler=2&udt=20190821',
+      subdomains: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    }).setMask(mask);
+
+    function save() {
+      const data = map.toDataURL({
+        'mimeType': 'image/png', // or 'image/png'
+        'save': true,             // to pop a save dialog
+        'fileName': boundary.properties.NAME + '_' + zoom + '.png'        // file name
+      });
+
+      // if (index < all) {
+      //   idx++;
+      //   setTimeout(() => {
+      //     init(14, idx).then(res => {});
+      //   }, 500);
+      // }
+    }
+
+
+    const data = await (new Promise(resolve => {
+      layer.on('layerload', () => {
+        const _name = new Date().getTime() + '.png';
+        save(_name);
+      });
+
+      map.addLayer(layer);
+    }));
+  }
+
+  // 10 13 15 16
+  init(13, 10).then(res => {});
+
+</script>
+</body>
+</html>
