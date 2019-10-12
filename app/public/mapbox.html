@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <link rel="stylesheet" href="../../node_modules/mapbox-gl/dist/mapbox-gl.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      /*width: 100%;*/
+    }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<script src="../../node_modules/mapbox-gl/dist/mapbox-gl-dev.js"></script>
+<script src="../../node_modules/@mapbox/geo-viewport/geo-viewport.js"></script>
+<script src="../../node_modules/@mapbox/sphericalmercator/sphericalmercator.js"></script>
+<script>
+  mapboxgl.accessToken = 'pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2owbDBkb2RwMDJyMTMycWRoeDE4d21sZSJ9.dWlPeAWsgnhUKdv1dCLTnw';
+  fetch('./data/beijing.json')
+    .then(res => res.json())
+    .then(boundary => {
+      const zoom = 5;
+
+      /**
+       * 循环存取坐标
+       * @param geojson
+       * @returns {*}
+       */
+      function getCoordinatesLoop(geojson) {
+        let coords;
+        if (geojson.type === 'Point') {
+          coords = [geojson.coordinates];
+        } else if (geojson.type === 'LineString' || geojson.type === 'MultiPoint') {
+          coords = geojson.coordinates;
+        } else if (geojson.type === 'Polygon' || geojson.type === 'MultiLineString') {
+          coords = geojson.coordinates.reduce((dump, part) => dump.concat(part), []);
+        } else if (geojson.type === 'MultiPolygon') {
+          coords = geojson.coordinates.reduce((dump, poly) => dump.concat(poly.reduce((points, part) => points.concat(part), [])), []);
+        } else if (geojson.type === 'Feature') {
+          coords = getCoordinatesLoop(geojson.geometry);
+        } else if (geojson.type === 'GeometryCollection') {
+          coords = geojson.geometries.reduce((dump, g) => dump.concat(getCoordinatesLoop(g)), []);
+        } else if (geojson.type === 'FeatureCollection') {
+          coords = geojson.features.reduce((dump, f) => dump.concat(getCoordinatesLoop(f)), []);
+        }
+        return coords;
+      }
+
+      /**
+       * 获取GeoJSON的数据范围
+       * @param geojson
+       * @returns {*}
+       */
+      function getExtent(geojson) {
+        let coords = null;
+        const extent = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY,
+          Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY,
+        ];
+        if (!geojson.hasOwnProperty('type')) return extent;
+        coords = getCoordinatesLoop(geojson);
+
+        if (coords) {
+          return coords.reduce((prev, coord) => [
+            Math.min(coord[0], prev[0]),
+            Math.min(coord[1], prev[1]),
+            Math.max(coord[0], prev[2]),
+            Math.max(coord[1], prev[3]),
+          ], extent);
+        } else {
+          return extent;
+        }
+      }
+
+      function mathRealWH (zoom, extent, useMap) {
+        if (useMap) {
+          const mapWarp = document.createElement('div');
+          // canvas.width = width;
+          // canvas.height = height;
+          mapWarp.style.width = `100px`;
+          mapWarp.style.height = `100px`;
+          const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
+            center: [116.3949, 40.2073], // starting position [lng, lat]
+            zoom: zoom,
+            // preserveDrawingBuffer: true
+          });
+
+          const max = [extent[0], extent[1]];
+          const min = [extent[2], extent[3]];
+          const pixelMin = map.project(min);
+          const pixelMax = map.project(max);
+          const width = Math.abs(pixelMax.x - pixelMin.x);
+          const height = Math.abs(pixelMax.y - pixelMin.y);
+          return {
+            width: width + 50,
+            height: height + 50,
+          }
+        } else {
+          const mercator = new SphericalMercator();
+
+          const max = [extent[0], extent[1]];
+          const min = [extent[2], extent[3]];
+          const pixelMin = mercator.px(min, zoom);
+          const pixelMax = mercator.px(max, zoom);
+          const width = Math.abs(pixelMax[0] - pixelMin[0]);
+          const height = Math.abs(pixelMax[1] - pixelMin[1]);
+          return {
+            width: width + 50,
+            height: height + 50,
+          }
+        }
+      }
+
+      const extent = getExtent(boundary);
+
+      const { width, height } = mathRealWH(zoom, extent, true);
+
+      const viewport = geoViewport.viewport(extent, [width, height], undefined, undefined, undefined, true);
+      const fitZoom = Math.max(viewport.zoom - 1, 0);
+      const fitCenter = viewport.center;
+
+      const dpi = 300;
+      Object.defineProperty(window, 'devicePixelRatio', {
+        get: function() { return dpi / 96 }
+      });
+
+      const mapWarp = document.createElement('div');
+      mapWarp.style.width = `${width}px`;
+      mapWarp.style.height = `${height}px`;
+
+      const map = new mapboxgl.Map({
+        container: mapWarp,
+        style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
+        center: fitCenter || [-74.50, 40], // starting position [lng, lat]
+        zoom: fitZoom,
+        preserveDrawingBuffer: true
+      });
+
+      map.on('load',() => console.log(map.getCanvas().toDataURL()));
+    });
+
+</script>
+</body>
+</html>

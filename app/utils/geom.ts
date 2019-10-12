@@ -1,3 +1,6 @@
+import * as sharp from 'sharp';
+import * as pixelmatch from 'pixelmatch';
+
 /**
  * 循环存取坐标
  * @param geojson
@@ -46,4 +49,22 @@ export function getExtent(geojson: any): any[] {
   } else {
     return extent;
   }
+}
+
+/**
+ * diff image is same
+ * @param imageData
+ * @param expectImage
+ */
+export async function diffImage(imageData, expectImage) {
+  const pngImage = await sharp(imageData);
+  const { width, height } = await pngImage.metadata();
+
+  const rawData = await pngImage.raw().toBuffer();
+
+  const expected = await sharp(expectImage)
+    .raw()
+    .toBuffer();
+
+  return pixelmatch(rawData, expected, null, width, height)
 }

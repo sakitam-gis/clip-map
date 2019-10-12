@@ -1,9 +1,9 @@
 import { set, get } from 'lodash';
-// require('@mapbox/flow-remove-types/register');
 import { UrlWithStringQuery, parse, format } from 'url';
 import axios from 'axios';
 import * as sharp from 'sharp';
 import * as mbgl from '@mapbox/mapbox-gl-native';
+import * as geoViewport from '@mapbox/geo-viewport';
 import * as Sphericalmercator from '@mapbox/sphericalmercator';
 // import * as sendToWormhole from 'stream-wormhole';
 import { Controller } from 'egg';
@@ -174,24 +174,26 @@ export default class MapboxController extends Controller {
       }
     };
 
+    const viewport = geoViewport.viewport(extent, [width, height], undefined, undefined, undefined, true);
+    const fitZoom = Math.max(viewport.zoom - 1, 0);
+    const fitCenter = viewport.center;
+
     const view = {
-      zoom,
-      center: [116.3949, 40.2073],
       height,
       width,
       bearing: 0,
       pitch: 0,
+      zoom: fitZoom,
+      center: fitCenter || [116.3949, 40.2073],
     };
 
     const map = new mbgl.Map(options);
 
-    map.load('mapbox://styles/mapbox/streets-v11');
+    const style = await ctx.service.maskData.getStyleJson('https://api.mapbox.com/styles/v1/mapbox/streets-v11?access_token=pk.eyJ1IjoiZXhhbXBsZXMiLCJhIjoiY2p0MG01MXRqMW45cjQzb2R6b2ptc3J4MSJ9.zA2W0IkI0c6KaAhJfk9bWg', false);
+
+    map.load(style);
 
     console.log(extent);
-
-    // map.fitBounds(extent, {
-    //   padding: 10
-    // });
 
     const data: {
       name: string;

@@ -35,6 +35,7 @@
     "jsdom": "^15.1.1",
     "maptalks.node": "^0.2.0",
     "mapbox-gl": "^1.4.1",
+    "pixelmatch": "^5.1.0",
     "stream-wormhole": "^1.1.0",
     "@mapbox/geo-viewport": "^0.4.0",
     "@mapbox/mapbox-gl-native": "^5.0.0",
