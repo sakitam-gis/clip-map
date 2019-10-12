@@ -15,7 +15,7 @@ const resolve = (_path: string) => path.resolve(__dirname, '..', _path);
  * @param dataBuffer
  * @returns {Promise<any>}
  */
-function getFileBuffer(name, dataBuffer) {
+function getFileBuffer(name: string, dataBuffer: Buffer): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     // const read = fs.createReadStream(pdfPath);
 

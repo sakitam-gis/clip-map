@@ -57,7 +57,7 @@ export default class HomeController extends Controller {
 
     const extent = mask.getExtent();
 
-    const { width, height } =mathRealWH(zoom, extent, devicePixelRatio);
+    const { width, height } = mathRealWH(zoom, extent, devicePixelRatio);
     const canvas = createCanvas(width, height);
 
     // const mapWarp = document.createElement('div');
@@ -93,7 +93,7 @@ export default class HomeController extends Controller {
       imageData: Buffer;
     } = await (new Promise((resolve, reject) => {
       layer.on('layerload', () => {
-        const _name = `${name}_${zoom}_${Date.now()}${devicePixelRatio > 1 ? '@2x' : ''}.png`;
+        const _name = `${name}_${zoom}_maptalks_${Date.now()}${devicePixelRatio > 1 ? '@2x' : ''}.png`;
         const out = fs.createWriteStream(utilResolve(`public/images/${_name}`));
 
         const stream = canvas.createPNGStream();
@@ -124,11 +124,14 @@ export default class HomeController extends Controller {
 
     // ctx.type = 'png';
     // ctx.set('Content-Type', 'image/png');
+    const host = getDomain(this);
+    const path = `/public/images/${data.name}`;
     ctx.body = {
       code: 200,
       data: {
-        host: getDomain(this),
-        path: `/public/images/${data.name}`
+        host,
+        path,
+        fullPath: host + path,
       }
     };
   }

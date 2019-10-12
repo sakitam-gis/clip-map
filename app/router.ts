@@ -20,5 +20,5 @@ export default (app: Application) => {
   router.post('/', controller.home.index);
 
   router.get('/export/maptalks', controller.maptalks.exportArea);
-  // router.get('/tile/:z/:x/:y', controller.tilelive.index);
+  router.get('/export/mapbox', controller.mapbox.exportMapboxMap);
 };
